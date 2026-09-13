@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Virtual dice and petri dish simulation of antibiotic resistance.">
+  <title>Antibiotic Resistance · Virtual Lab</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231a2b35'/%3E%3Ccircle cx='32' cy='32' r='19' fill='%23d9edf1' opacity='.9'/%3E%3Ccircle cx='26' cy='27' r='4' fill='%235b91a0'/%3E%3Ccircle cx='39' cy='37' r='5' fill='%23d06a5e'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .bacterium{transform:translate(-50%,-50%);overflow:visible}
+    .bacterium.blue{animation:blue-pulse 2.8s ease-in-out infinite}
+    .bacterium.yellow{animation:yellow-pulse 2.05s ease-in-out infinite}
+    .bacterium.red{animation:red-pulse 1.25s ease-in-out infinite}
+    .bacterium.removed{transform:translate(-50%,-50%) scale(.1) rotate(35deg)}
+    .eye{position:absolute;z-index:2;top:7px;width:4px;height:5px;border-radius:50%;background:#17343c}
+    .eye.left{left:8px}.eye.right{right:8px}
+    .brow{position:absolute;z-index:2;top:5px;width:8px;border-top:2px solid #17343c}
+    .brow.left{left:6px;transform:rotate(18deg)}.brow.right{right:6px;transform:rotate(-18deg)}
+    .mouth{position:absolute;z-index:2;left:11px;top:15px;width:9px;height:4px;border-top:1.5px solid #17343c;border-radius:8px 8px 0 0}
+    .bacterium.yellow .eye,.bacterium.red .eye{background:#472f25}
+    .bacterium.yellow .brow,.bacterium.red .brow,.bacterium.yellow .mouth,.bacterium.red .mouth{border-color:#472f25}
+    .bacterium{width:140px;height:116px;object-fit:contain;background:transparent!important;box-shadow:none!important;border-radius:0}
+    .bacterium:before,.bacterium:after{display:none}
+    .bacterium.removed{transform:translate(-50%,-50%) scale(.08) rotate(35deg)}
+    @media(max-width:520px){.bacterium{width:108px;height:88px}}
+    @keyframes blue-pulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.08)}}
+    @keyframes yellow-pulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.15)}}
+    @keyframes red-pulse{0%,100%{transform:translate(-50%,-50%) scale(1)}45%{transform:translate(-50%,-50%) scale(1.24)}65%{transform:translate(-50%,-50%) scale(1.06)}}
+    .die{width:76px;height:76px;padding:13px;border-radius:12px}
+    .die span{width:13px;height:13px}
+    .day-heading{display:flex;align-items:center;gap:15px}
+    .day-heading .die{flex:0 0 auto}
+    .roll-copy strong{display:block;margin-top:5px;font-size:14px}
+    .recording-area{display:flex;align-items:center;gap:25px;margin-right:auto}
+    .recording-copy strong{display:block;margin-top:5px;font-size:14px}
+    .type-key{display:flex;gap:14px;color:#657b80;font:11px 'DM Mono'}
+    .type-key span{display:flex;align-items:center;gap:5px;white-space:nowrap}
+    .type-key .key-copy{display:block}
+    .type-key .key-copy b,.type-key .key-copy small{display:block}
+    .type-key .key-copy small{margin-top:3px;color:var(--muted);font-size:10px}
+    .type-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+    .type-dot.blue{background:var(--blue)}.type-dot.yellow{background:var(--yellow)}.type-dot.red{background:var(--red)}
+    @media(max-width:650px){.recording-area{display:block}.type-key{margin-top:10px;gap:8px}.action-row{gap:10px}.reset-button{padding-left:10px;padding-right:10px}}
+  </style>
+</head>
+<body>
+  <main>
+    <section class="lab-card">
+      <div class="lab-head"><div class="day-heading"><div class="die" id="die" aria-label="Die showing 1"><span></span><span></span><span></span><span></span><span></span><span></span></div><div class="roll-copy"><span class="section-label">DAY <b id="day">0</b> OF 8</span><h2 id="dayTitle">Before the first dose</h2><strong id="rollMessage">Roll to take the first dose</strong></div></div><div class="population"><span>BACTERIA IN YOUR BODY</span><b id="total">20</b></div></div>
+      <div class="dish-wrap"><div class="dish" id="dish" aria-label="Petri dish showing bacteria"><div class="dish-shine"></div><div class="bacteria-layer" id="bacteria"></div></div><div class="dish-caption"><span><i class="live-dot"></i><b id="dishStatus">20 bacteria are present</b></span><span id="doseStatus">Ready for the first roll</span></div></div>
+      <div class="action-row"><div class="recording-area"><div class="recording-copy"><span class="section-label">STUDENT RECORD</span><strong>Record the number of each type in your table.</strong></div><div class="type-key"><span><i class="type-dot blue"></i><span class="key-copy"><b>Blue: least resistant</b><small id="blueKeyCount">13 bacteria</small></span></span><span><i class="type-dot yellow"></i><span class="key-copy"><b>Yellow: resistant</b><small id="yellowKeyCount">6 bacteria</small></span></span><span><i class="type-dot red"></i><span class="key-copy"><b>Red: extremely resistant</b><small id="redKeyCount">1 bacterium</small></span></span></div></div><button class="roll-button" id="rollButton">Roll the die <span>↻</span></button><button class="reset-button" id="resetButton">Reset</button></div>
+    </section>
+
+    <p class="takeaway" id="takeaway">Each surviving type reproduces after every roll. Complete all eight days to see which bacteria remain.</p>
+  </main>
+  <footer><span>Natural selection of antibiotic resistance</span><span>Virtual activity</span></footer>
+  <script src="app.js"></script>
+  <style>
+    main{padding-top:26px}
+    .die{perspective:260px;transform-style:preserve-3d;box-shadow:0 5px 0 #b8cbca,0 9px 14px #19303a25,0 0 0 1px #afc7c3}
+    .die.rolling{animation:realistic-roll .62s cubic-bezier(.2,.75,.22,1)}
+    @keyframes realistic-roll{0%{transform:translateY(0) rotateX(0) rotateY(0) rotateZ(0)}18%{transform:translateY(-9px) rotateX(95deg) rotateY(70deg) rotateZ(18deg)}42%{transform:translateY(-13px) rotateX(235deg) rotateY(170deg) rotateZ(-30deg)}68%{transform:translateY(-4px) rotateX(385deg) rotateY(275deg) rotateZ(12deg)}86%{transform:translateY(1px) rotateX(500deg) rotateY(355deg) rotateZ(-4deg)}100%{transform:translateY(0) rotateX(540deg) rotateY(360deg) rotateZ(0)}}
+    .die:after{content:'';position:absolute;inset:2px;border-radius:8px;background:linear-gradient(135deg,#fff8,transparent 35%,#19303a0a);pointer-events:none}
+  </style>
+</body>
+</html>
